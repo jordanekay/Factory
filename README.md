@@ -9,7 +9,7 @@ The first dependency injection system I ever wrote was [Resolver](https://github
 1. Resolver requires pre-registration of all services up front. 
 2. Resolver uses type inference to dynamically find and return registered services from a container.
 
-The first drawback is relatively minor. While preregistration could lead to a performance hit on application launch, in practice the process is usually quick and not normally noticable.
+The first drawback is relatively minor. While preregistration could lead to a performance hit on application launch, in practice the process is usually quick and not normally noticeable.
 
 No, it’s the second one that’s somewhat more problematic.
 
@@ -44,7 +44,7 @@ Most container-based dependency injection systems require you to define in some 
  
 ```swift
 extension Container {
-    static let myService = Factory { MyService() as MyServiceType }
+	static let myService = Factory { MyService() as MyServiceType }
 }
 ```
 Unlike Resolver which often requires defining a plethora of nested registration functions, or SwiftUI, where defining a new environment variable requires creating a new EnvironmentKey and adding additional getters and setters, here we simply add a new `Factory` to the default container. When called, the factory closure is evaluated and returns an instance of our dependency. That's it.
@@ -53,8 +53,8 @@ Injecting and using the service where needed is equally straightforward. Here's 
 
 ```swift
 class ContentViewModel: ObservableObject {
-    @Injected(Container.myService) private var myService
-    ...
+	@Injected(Container.myService) private var myService
+	...
 }
 ```
 Here our view model uses one of Factory's `@Injected` property wrappers to request the desired dependency. Similar to `@EnvironmentObject` in SwiftUI, we provide the property wrapper initializer with a reference to a factory of the desired type and it handles the rest.
@@ -89,13 +89,13 @@ Finally, note that it's possible to bypass the property wrapper and talk to the 
 
 ```swift
 class ContentViewModel: ObservableObject {
-    // dependencies
-    private let myService = Container.myService()
-    private let eventLogger = Container.eventLogger()
-    ...
+	// dependencies
+	private let myService = Container.myService()
+	private let eventLogger = Container.eventLogger()
+	...
 }
 ```
-Just call the desired specific factory as a function and you'll get an instance of its managed dpendency. It's that simple.
+Just call the desired specific factory as a function and you'll get an instance of its managed dependency. It's that simple.
 
 *You can access the factory directly or the property wrapper if you prefer, but either way for clarity I'd suggest grouping all of a given object's dependencies in a single place near the top of the class and marking them as private.*
 
@@ -107,7 +107,7 @@ Or keep the container idea, but write something similar to this…
 
 ```swift
 extension Container {
-    static var myService: MyServiceType { MyService() }
+	static var myService: MyServiceType { MyService() }
 }
 ```
 
@@ -115,11 +115,11 @@ Well, the primary benefit one gains from using a container-based dependency inje
 
 ```swift
 struct ContentView: View {
-    @StateObject var model = ContentViewModel()
-    var body: some View {
-        Text(model.text())
-            .padding()
-    }
+	@StateObject var model = ContentViewModel()
+	var body: some View {
+		Text(model.text())
+			.padding()
+	}
 }
 ```
 
@@ -129,10 +129,10 @@ It's easy. Just replace `MyService` with a mock that also conforms to `MyService
 
 ```swift
 struct ContentView_Previews: PreviewProvider {
-    static var previews: some View {
-        let _ = Container.myService.register { MockService2() }
-        ContentView()
-    }
+	static var previews: some View {
+		let _ = Container.myService.register { MockService2() }
+		ContentView()
+	}
 }
 ```
 
@@ -161,7 +161,7 @@ This can be done in Factory just by adding a scope attribute.
 
 ```swift
 extension Container {
-    static let myService = Factory(scope: .singleton) { MyService() as MyServiceType }
+	static let myService = Factory(scope: .singleton) { MyService() as MyServiceType }
 }
 ```
 Now whenever someone requests an instance of `myService` they'll get the same instance of the object as everyone else.
@@ -174,20 +174,20 @@ You can also add your own special purpose caches to the mix. Try this.
 
 ```swift
 extension Container.Scope {
-    static var session = Cached()
+	static var session = Cached()
 }
 
 extension Container {
-    static let authenticatedUser = Factory(scope: .session) { AuthenticatedUser() }
-    static let profileImageCache = Factory(scope: .session) { ProfileImageCache() }
+	static let authenticatedUser = Factory(scope: .session) { AuthenticatedUser() }
+	static let profileImageCache = Factory(scope: .session) { ProfileImageCache() }
 }
 ```
 Once created, a single instance of `AuthenticatedUser` and `ProfileImageCache` will be provided to anyone that needs one... up until the point where the session scope is reset, perhaps by a user logging out.
 
 ```swift
 func logout() {
-    Container.Scope.session.reset()
-    ...
+	Container.Scope.session.reset()
+	...
 }
 ```
 Scopes are powerful tools to have in your arsenal. Use them.
@@ -200,7 +200,7 @@ That's easy to do in Factory. Here we have a service that needs an instance of `
 
 ```swift
 extension Container {
-    static let constructedService = Factory { ConstructedService(service: myService()) }
+	static let constructedService = Factory { ConstructedService(service: myService()) }
 }
 ```
 All of the factories in a container are visible to the other factories in that container. Just call the needed factory as a function and the dependency will be provided.
@@ -211,9 +211,9 @@ Like it or not, some services require one or more parameters to be passed to the
 
 ```swift
 extension Container {
-    static var parameterService = ParameterFactory<Int, MyServiceType> { n in
-        ParameterService(value: n)
-    }
+	static var parameterService = ParameterFactory<Int, MyServiceType> { n in
+		ParameterService(value: n)
+	}
 }
 
 ```
@@ -222,16 +222,16 @@ One caveat is that you can't use the `@Injected` property wrapper with `Paramete
 
 ```swift
 class MyClass {
-    var myService: MyServiceType
-    init(_ n: Int) {
-         myService = Container.parameterService(n)
-    }
+	var myService: MyServiceType
+	init(_ n: Int) {
+		 myService = Container.parameterService(n)
+	}
 }
 ```
 If you need to pass more than one parameter just use a tuple, dictionary, or struct.
 ```swift
 static var tupleService = ParameterFactory<(Int, Int), MultipleParameterService> { (a, b) in
-    MultipleParameterService(a: a, b: b)
+	MultipleParameterService(a: a, b: b)
 }
 ```
 Finally, if you define a scope keep in mind that the first argument passed will be used to create the dependency and *that* dependency will be cached. Since the cached object will be returned from now on any arguments passed in later requests will be ignored until the scope is reset.
@@ -242,28 +242,28 @@ With Factory registrations can be performed at any time. Consider the following 
 
 ```swift
 extension Container {
-    static let userProviding = Factory<UserProviding?> { nil }
+	static let userProviding = Factory<UserProviding?> { nil }
 }
 
 func authenticated(with user: User) {
-    ...
-    Container.userProviding.register { UserProvider(user: user) }
-    ...
+	...
+	Container.userProviding.register { UserProvider(user: user) }
+	...
 }
 
 func logout() {
-    ...
-    Container.userProviding.reset()
-    ...
+	...
+	Container.userProviding.reset()
+	...
 }
 ```
 Now any view model or service that needs an instance of an authenticated user will receive one (or nothing if no user is authenticated). Here's an example:
 ```swift
 class SomeViewModel: ObservableObject {
-    @Injected(Container.userProviding) private let provider
-    func update(email: String) {
-        provider?.updateEmailAddress(email)
-    }
+	@Injected(Container.userProviding) private let provider
+	func update(email: String) {
+		provider?.updateEmailAddress(email)
+	}
 }
 ```
 The injected provider is optional by default since the Factory was defined that way. You *could* explicitly unwrap the optional...
@@ -273,7 +273,7 @@ The injected provider is optional by default since the Factory was defined that 
 
 But doing so violates the core premise on which Factory was built in the first place: *Your code is guaranteed to be safe.* 
 
-I'd avise against it.
+I'd advise against it.
 
 A few other things here. First, note that we used `@Injected` to supply an optional type. We don't need a `@OptionalInjected` property wrapper to do this as we did in Resolver. Same for `@LazyInjected`.
 
@@ -286,13 +286,13 @@ And finally, note that calling register also *removes any cached dependency from
 If you use the above technique to create optional registrations across multiple modules in your project you may find that you need to register some instances prior to application initialization. If so you can do the following.
 ```swift
 extension Container: AutoRegistering {
-    static func registerAllServices() {
-        autoRegisteredService.register {
-            ModuleA.register()
-            ModuleB.register()
-            ...
-        }
-    }
+	static func registerAllServices() {
+		autoRegisteredService.register {
+			ModuleA.register()
+			ModuleB.register()
+			...
+		}
+	}
 }
 ```
 Just make `Container` conform to `AutoRegistering` and provide the `registerAllServices` static function. This function will be called *once* prior to the very first Factory service resolution.
@@ -301,30 +301,30 @@ Just make `Container` conform to `AutoRegistering` and provide the `registerAllS
 Factory also has `LazyInjected` and `WeakLazyInjected` property wrappers. Use `LazyInjected` when you want to defer construction of some class until it's actually needed. Here the child `service` won't be instantiated until the `test` function is called.
 ```swift
 class ServicesP {
-    @LazyInjected(Container.servicesC) var service
-    let name = "Parent"
-    init() {}
-    func test() -> String? {
-        service.name
-    }
+	@LazyInjected(Container.servicesC) var service
+	let name = "Parent"
+	init() {}
+	func test() -> String? {
+		service.name
+	}
 }
 ```
 And `WeakLazyInjected` is useful when building parent/child relationships and you want to avoid retain cycles back to the parent class. It's also lazy since otherwise you'd have a cyclic dependency between the parent and the child. (P needs C which needs P which needs C which...)'
 ```swift
 class ServicesC {
-    @WeakLazyInjected(Container.servicesP) var service: ServicesP?
-    init() {}
-    let name = "Child"
-    func test() -> String? {
-        service?.name
-    }
+	@WeakLazyInjected(Container.servicesP) var service: ServicesP?
+	init() {}
+	let name = "Child"
+	func test() -> String? {
+		service?.name
+	}
 }
 ```
 And the factories. Note the shared scopes so references can be kept and maintained for the parent/child relationships.
 ```swift
 extension Container {
-    static var servicesP = Factory(scope: .shared) { ServicesP() }
-    static var servicesC = Factory(scope: .shared) { ServicesC() }
+	static var servicesP = Factory(scope: .shared) { ServicesP() }
+	static var servicesC = Factory(scope: .shared) { ServicesC() }
 }
 ```
 Note that if you use `WeakLazyInjected` then that class must have been instantiated previously and a strong reference to the class must be maintained elsewhere. If not then the class will be released as soon as it's created. Think of it like...
@@ -341,48 +341,48 @@ Consider:
 typealias AccountProviding = () async throws -> [Account]
 
 extension Container {
-    static let accountProvider = Factory<AccountProviding> {
-        { try await Network.get(path: "/accounts") }
-    }
+	static let accountProvider = Factory<AccountProviding> {
+		{ try await Network.get(path: "/accounts") }
+	}
 }
 ```
 And here's the view model that utilizes it.
 ```swift
 class AccountViewModel: ObservableObject {
-    @Injected(Container.accountProvider) var accountProvider
-    @Published var accounts: [Account] = []
-    @MainActor func load() async {
-        do {
-            accounts = try await accountProvider()
-        } catch {
-            print(error)
-        }
-    }
+	@Injected(Container.accountProvider) var accountProvider
+	@Published var accounts: [Account] = []
+	@MainActor func load() async {
+		do {
+			accounts = try await accountProvider()
+		} catch {
+			print(error)
+		}
+	}
 }
 ```
 Now consider how easy it is to write a test with mock accounts...
 ```swift
 func testAllAccounts() async {
-    Container.accountProvider.register {{ Account.mockAccounts }}
-    do {
-        let viewModel = AccountViewModel()
-        try await viewModel.load()
-        XCTAssert(viewModel.accounts.count == 5)
-    } catch {
-        XCTFail("Account load failed")
-    }
+	Container.accountProvider.register {{ Account.mockAccounts }}
+	do {
+		let viewModel = AccountViewModel()
+		try await viewModel.load()
+		XCTAssert(viewModel.accounts.count == 5)
+	} catch {
+		XCTFail("Account load failed")
+	}
 }
 ```
-Or test edge cases like no accounts found. Or test specifc errors.
+Or test edge cases like no accounts found. Or test specific errors.
 ```swift
 func testEmptyAccounts() async {
-    Container.accountProvider.register {{ [] }}
-    ...
+	Container.accountProvider.register {{ [] }}
+	...
 }
 
 func testErrorLoadingAccounts() async {
-    Container.accountProvider.register {{ throw APIError.network }}
-    ...
+	Container.accountProvider.register {{ throw APIError.network }}
+	...
 }
 ```
 Here's an article that goes into the technique in more detail: [Factory and Functional Dependency Injection](https://betterprogramming.pub/factory-and-functional-dependency-injection-2d0a38042d05)
@@ -393,16 +393,16 @@ In a large project you might want to segregate factories into additional, smalle
 
 ```swift
 class OrderContainer: SharedContainer {
-    static let optionalService = Factory<SimpleService?> { nil }
-    static let constructedService = Factory { MyConstructedService(service: myServiceType()) }
-    static let additionalService = Factory(scope: .session) { SimpleService() }
+	static let optionalService = Factory<SimpleService?> { nil }
+	static let constructedService = Factory { MyConstructedService(service: myServiceType()) }
+	static let additionalService = Factory(scope: .session) { SimpleService() }
 }
 ```
 Just define a new container derived from `SharedContainer` and add your factories there. You can have as many as you wish, and even derive other containers from your own. 
 
 ```swift
 class PaymentsContainer: OrderContainer {
-    static let paymentsServiceType = Factory<PaymentsServiceType> { PaymentsService(service: myServiceType()) }
+	static let paymentsServiceType = Factory<PaymentsServiceType> { PaymentsService(service: myServiceType()) }
 }
 ```
 
@@ -410,10 +410,10 @@ While a container *tree* makes dependency resolutions easier, don't forget that 
 
 ```swift
 class PaymentsContainer: SharedContainer {
-    static let anotherService = Factory { AnotherService(OrderContainer.optionalService()) }
+	static let anotherService = Factory { AnotherService(OrderContainer.optionalService()) }
 }
 ```
-It's important to note that in Factory a custom container is not really a "container" in the traditional sense. It's a name space, used to group similar or related factories together. All registrations and scopes are still managed by the parent `SharedContainer` classs on which all containers are based.
+It's important to note that in Factory a custom container is not really a "container" in the traditional sense. It's a name space, used to group similar or related factories together. All registrations and scopes are still managed by the parent `SharedContainer` class on which all containers are based.
 
 ## SharedContainer
 
@@ -421,7 +421,7 @@ You can also add your own factories to the root `SharedContainer` class. Anythin
 
 ```swift
 extension SharedContainer {
-    static let api = Factory<APIServiceType> { APIService() }
+	static let api = Factory<APIServiceType> { APIService() }
 }
 ```
 As mentioned earlier, any registrations defined with your app are managed here.
@@ -431,17 +431,17 @@ As mentioned earlier, any registrations defined with your app are managed here.
 Note that you can also use the Service Locator pattern in SwiftUI to assign a dependency to a `StateObject` or `ObservedObject`.
 ```swift
 class ContentView: ObservableObject {
-    @StateObject private var viewModel = Container.contentViewModel()
-    var body: some View {
-        ...
-    }
+	@StateObject private var viewModel = Container.contentViewModel()
+	var body: some View {
+		...
+	}
 }
 ```
 Keep in mind that if you assign to an `ObservedObject` your Factory is responsible for managing the object's lifecycle (see the section on Scopes below).
 
 Unlike Resolver, Factory doesn't have an @InjectedObject property wrapper. There are [a few reasons for this](https://github.com/hmlongco/Factory/issues/15), but for now doing your own assignment to `StateObject` or `ObservedObject` is the preferred approach. 
 
-That said, at this point in time I feel that we should probably avoid using Factory to create the view model in the first place.  It's usually unneccesary, [you really can't use protocols with view models anyway](https://betterprogramming.pub/swiftui-view-models-are-not-protocols-8c415c0325b1), and for the most part Factory's really designed to provide the VM and other services with the dependencies that *they* need. 
+That said, at this point in time I feel that we should probably avoid using Factory to create the view model in the first place.  It's usually unnecessary, [you really can't use protocols with view models anyway](https://betterprogramming.pub/swiftui-view-models-are-not-protocols-8c415c0325b1), and for the most part Factory's really designed to provide the VM and other services with the dependencies that *they* need. 
 
 Especially since those services have no access to the environment.
 
@@ -451,17 +451,17 @@ With that in mind, here's an example of updating a view model's service dependen
 
 ```swift
 class ContentView: ObservableObject {
-    @StateObject var viewModel = ContentViewModel()
-    var body: some View {
-        ...
-    }
+	@StateObject var viewModel = ContentViewModel()
+	var body: some View {
+		...
+	}
 }
 
 struct ContentView_Previews: PreviewProvider {
-    static var previews: some View {
-        let _ = Container.myService.register { MockServiceN(4) }
-        ContentView()
-    }
+	static var previews: some View {
+		let _ = Container.myService.register { MockServiceN(4) }
+		ContentView()
+	}
 }
 ```
 If we can control where the view model gets its data then we can put the view model into pretty much any state we choose.
@@ -469,17 +469,17 @@ If we can control where the view model gets its data then we can put the view mo
 If we want to do multiple previews at once, each with different data, we simply need to instantiate our view models and pass them into the view as parameters.
 ```swift
 struct ContentView_Previews: PreviewProvider {
-    static var previews: some View {
-        Group {
-            let _ = Container.myService.register { MockServiceN(4) }
-            let vm1 = ContentViewModel()
-            ContentView(viewModel: vm1)
+	static var previews: some View {
+		Group {
+			let _ = Container.myService.register { MockServiceN(4) }
+			let vm1 = ContentViewModel()
+			ContentView(viewModel: vm1)
 
-            let _ = Container.myService.register { MockServiceN(8) }
-            let vm2 = ContentViewModel()
-            ContentView(viewModel: vm2)
-        }
-    }
+			let _ = Container.myService.register { MockServiceN(8) }
+			let vm2 = ContentViewModel()
+			ContentView(viewModel: vm2)
+		}
+	}
 }
 ```
 
@@ -489,17 +489,17 @@ If we have several mocks that we use all of the time in our previews or unit tes
 
 ```swift
 extension Container {
-    static func setupMocks() {
-        myService.register { MockServiceN(4) }
-        sharedService.register { MockService2() }
-    }
+	static func setupMocks() {
+		myService.register { MockServiceN(4) }
+		sharedService.register { MockService2() }
+	}
 }
 
 struct ContentView_Previews: PreviewProvider {
-    static var previews: some View {
-        let _ = Container.setupMocks()
-        ContentView()
-    }
+	static var previews: some View {
+		let _ = Container.setupMocks()
+		ContentView()
+	}
 }
 ```
 
@@ -525,28 +525,28 @@ The `includingSingletons` option must be explicitly specified in order to reset 
 
 ## Xcode Unit Tests
 
-Finally, Factory has a few additional provisions added to make unit testing eaiser. In your unit test setUp function you can *push* the current state of the registration system and then register and test anything you want.
+Finally, Factory has a few additional provisions added to make unit testing easier. In your unit test setUp function you can *push* the current state of the registration system and then register and test anything you want.
 
 ```swift
 final class FactoryCoreTests: XCTestCase {
 
-    override func setUp() {
-        super.setUp()
-        Container.Registrations.push()
-        Container.setupMocks()
-     }
+	override func setUp() {
+		super.setUp()
+		Container.Registrations.push()
+		Container.setupMocks()
+	 }
 
-    override func tearDown() {
-        super.tearDown()
-        Container.Registrations.pop()
-    }
-    
-    func testSomething() throws {
-        Container.myServiceType.register(factory: { MockService() })
-        let model = Container.someViewModel()
-        XCTAssertTrue(model.isLoaded)
-        ...
-    }
+	override func tearDown() {
+		super.tearDown()
+		Container.Registrations.pop()
+	}
+	
+	func testSomething() throws {
+		Container.myServiceType.register(factory: { MockService() })
+		let model = Container.someViewModel()
+		XCTAssertTrue(model.isLoaded)
+		...
+	}
 }
 ```
 
